@@ -2,6 +2,26 @@
 
 These patterns elevate agents from simple task executors to autonomous specialists that reduce hallucination and improve reliability.
 
+## Why This Works: The Mechanism
+
+LLMs hallucinate when they have too much freedom and too little structure. A vague prompt like "help with this code" forces the model to guess intent, guess approach, guess what tools to use, and guess when it's done. Each guess compounds uncertainty.
+
+**Structured prompts reduce hallucination by constraining the solution space:**
+
+1. **Request classification forces explicit reasoning** - Before acting, the agent must categorize the request. This prevents jumping to conclusions and ensures the right strategy is selected.
+
+2. **Phase gates prevent skipping steps** - When Phase 1 has exit criteria, the agent can't skip to Phase 3. Each phase must complete before transitioning, ensuring thorough execution.
+
+3. **Tool constraints prevent wandering** - An agent with only `Read, Grep, Glob` cannot accidentally modify files. The constraint isn't limiting—it's clarifying. The agent knows exactly what it can and cannot do.
+
+4. **Mandatory output structures force completeness** - When the prompt requires `<findings>`, `<confidence>`, and `<next_steps>`, the agent can't return a vague answer. It must fill each section.
+
+5. **Anti-patterns provide negative examples** - NEVER DO sections are as important as instructions. They close off common failure modes explicitly.
+
+6. **Escalation triggers acknowledge limits** - An agent that knows when to stop and ask for help is more reliable than one that guesses forever.
+
+**The paradox:** Rigid structure creates reliable autonomy. The agent has freedom *within* well-defined boundaries, which produces consistent, trustworthy behavior.
+
 ## Core Insight: Prompts as State Machines
 
 The most effective agents treat prompts as state machines, not text. Each phase has:
@@ -286,9 +306,16 @@ Recommend: [specific additional search or user clarification]"
 
 ## Key Takeaways
 
-1. **Structure creates autonomy** - Rigid phases paradoxically enable more autonomous behavior
-2. **Classification reduces errors** - Knowing request type determines correct execution path
-3. **Mandatory output prevents drift** - Required sections ensure complete responses
-4. **Cost awareness improves efficiency** - Right tool for right job
-5. **Explicit anti-patterns prevent mistakes** - NEVER DO is as important as MUST DO
-6. **Escalation builds trust** - Knowing limits is a feature, not a bug
+1. **Structure creates autonomy** - Rigid phases paradoxically enable more autonomous behavior. The agent isn't guessing what to do next; the state machine tells it.
+
+2. **Classification reduces errors** - Forcing explicit request typing prevents the agent from applying wrong strategies. A "quick lookup" shouldn't trigger comprehensive analysis.
+
+3. **Mandatory output prevents drift** - Required sections ensure complete responses. The agent can't hand-wave; it must fill `<confidence>` and `<next_steps>`.
+
+4. **Cost awareness improves efficiency** - Understanding tool economics (FREE/CHEAP/EXPENSIVE) prevents wasteful invocations and guides optimal delegation.
+
+5. **Explicit anti-patterns prevent mistakes** - NEVER DO sections close off failure modes. The agent knows what NOT to do, not just what to do.
+
+6. **Escalation builds trust** - An agent that knows its limits and asks for help is more reliable than one that guesses forever. "I don't know" is a valid output.
+
+**The bottom line:** Vague prompts produce vague results. State machine prompts with constraints, phases, and exit criteria produce consistent, reliable agents that know what they're doing and when they're done.
