@@ -62,6 +62,17 @@ Claude Code includes these built-in subagents:
 - **Explore**: Fast read-only codebase exploration (Haiku)
 - **Plan**: Research during plan mode (Sonnet)
 
+**Advanced Patterns:**
+
+For complex agents, treat prompts as state machines with:
+- Phase-based execution (classify → assess → execute)
+- Request classification (different types → different strategies)
+- Mandatory output structures (not suggestions, requirements)
+- Explicit anti-patterns (NEVER DO sections)
+- Escalation triggers (when to stop and ask for help)
+
+See `references/advanced-patterns.md` for detailed guidance.
+
 **Using the Task Tool:**
 
 The Task tool launches subagents. Required parameters:
@@ -152,6 +163,7 @@ All in `references/`:
 | agent-configuration.md | Complete field reference, model selection |
 | available-tools.md | All tools agents can access |
 | best-practices.md | Design principles, prompt writing |
+| advanced-patterns.md | State machines, request classification, delegation, escalation |
 | example-agents.md | Code reviewer, debugger, data scientist |
 </reference_index>
 

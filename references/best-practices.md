@@ -1,5 +1,7 @@
 # Subagent Best Practices
 
+For advanced patterns including state machines, request classification, and orchestration, see [advanced-patterns.md](advanced-patterns.md).
+
 ## Design Principles
 
 ### 1. Single Responsibility
