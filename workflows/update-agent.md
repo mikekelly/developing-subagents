@@ -1,19 +1,27 @@
 <required_reading>
-Before updating, read:
-- references/agent-configuration.md
-- references/available-tools.md
+Before updating, read based on platform:
+- Claude Code → references/claude-code-config.md
+- OpenCode → references/opencode-config.md
+- Both → references/available-tools.md
 </required_reading>
 
 <objective>
-Modify an existing subagent's configuration, tools, or system prompt.
+Modify an existing agent's configuration, tools, or system prompt for Claude Code or OpenCode.
 </objective>
 
 <process>
-## Step 1: Read Current Agent
+## Step 1: Identify Platform
+
+Determine platform from file path:
+- `.claude/agents/` or `~/.claude/agents/` → Claude Code
+- `.opencode/agent/` or `~/.config/opencode/agent/` → OpenCode
+- `opencode.json` → OpenCode (JSON format)
+
+## Step 2: Read Current Agent
 
 Get the agent file path and read its contents to understand current configuration.
 
-## Step 2: Identify Change Type
+## Step 3: Identify Change Type
 
 Ask: "What would you like to change?"
 
@@ -22,43 +30,52 @@ Common updates:
 - Change model
 - Improve system prompt
 - Update description
-- Add skills
+- Change permissions (OpenCode)
+- Add skills (Claude Code)
+- Change mode (OpenCode)
 
-## Step 3: Make Changes
+## Step 4: Make Changes
 
 ### Updating Tools
 
-Current tools → New tools mapping:
-
-To add tools:
+#### Claude Code:
 ```yaml
-tools: Read, Grep, Glob  # before
-tools: Read, Grep, Glob, Edit, Write  # after
+# Before
+tools: Read, Grep, Glob
+
+# After (add Edit, Write)
+tools: Read, Grep, Glob, Edit, Write
 ```
 
-To remove tools:
+#### OpenCode:
 ```yaml
-tools: Read, Edit, Write, Bash  # before
-tools: Read, Grep, Glob  # after (read-only)
-```
+# Before
+tools:
+  write: false
+  bash: false
 
-To inherit all tools:
-```yaml
-# Remove the tools line entirely
+# After
+tools:
+  write: true
+  edit: true
+  bash: true
 ```
 
 ### Updating Model
 
-Valid values: `sonnet`, `opus`, `haiku`, `inherit`
-
+#### Claude Code:
 ```yaml
-model: sonnet  # before
-model: opus    # after (for more complex reasoning)
+model: sonnet  # Options: sonnet, opus, haiku, inherit
+```
+
+#### OpenCode:
+```yaml
+model: anthropic/claude-opus-4-20250514
 ```
 
 ### Updating Description
 
-Ensure description includes:
+Both platforms - ensure description includes:
 1. What the agent does
 2. When to use it
 3. Trigger words if needed ("proactively", "automatically")
@@ -71,30 +88,58 @@ When improving prompts:
 - Add output format if not specified
 - Add domain expertise for specialized agents
 
-### Adding Skills
+### Updating Permissions (OpenCode Only)
+
+```yaml
+permission:
+  "git *": allow
+  "npm test": allow
+  "*": ask
+```
+
+### Updating Mode (OpenCode Only)
+
+```yaml
+mode: primary    # Main conversation agent
+mode: subagent   # Specialist
+mode: all        # Both
+```
+
+### Adding Skills (Claude Code Only)
 
 ```yaml
 skills: skill1, skill2
 ```
 
-Note: Subagents don't inherit skills from parent conversation.
+Note: Subagents don't inherit skills from parent.
 
-## Step 4: Validate Changes
+## Step 5: Validate Changes
 
-Check:
+### Claude Code:
 - [ ] YAML syntax is valid
-- [ ] Name hasn't changed (creates new agent otherwise)
+- [ ] `name` hasn't changed (creates new agent otherwise)
 - [ ] Tools are comma-separated
 - [ ] Model is valid value
-- [ ] System prompt is below the YAML frontmatter
 
-## Step 5: Save and Test
+### OpenCode:
+- [ ] YAML syntax is valid
+- [ ] Filename matches intended name
+- [ ] Tools are object with booleans
+- [ ] Model is full identifier
+- [ ] Permissions use valid values (allow/ask/deny)
+
+## Step 6: Save and Test
 
 Save the updated file.
 
-Test with explicit invocation:
+### Claude Code:
 ```
 > Use the [agent-name] agent to [task matching new capabilities]
+```
+
+### OpenCode:
+```
+@agent-name [task matching new capabilities]
 ```
 
 Verify:
@@ -105,8 +150,9 @@ Verify:
 
 <success_criteria>
 Update is complete when:
-- [ ] Changes made to correct fields
-- [ ] YAML syntax validated
+- [ ] Platform correctly identified
+- [ ] Changes made to correct fields for that platform
+- [ ] Configuration syntax validated
 - [ ] File saved to same location
 - [ ] Agent tested with new configuration
 - [ ] Behavior matches expected changes

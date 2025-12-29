@@ -1,8 +1,6 @@
 # Available Tools Reference
 
-## Core Tools
-
-These tools are always available in Claude Code:
+## Claude Code Tools
 
 ### File Operations
 
@@ -42,121 +40,154 @@ These tools are always available in Claude Code:
 |------|-------------|----------|
 | `NotebookEdit` | Edit Jupyter notebooks | Data science workflows |
 
-## Tool Sets by Purpose
+### Claude Code Tool Sets
+
+```yaml
+# Read-only analysis
+tools: Read, Grep, Glob
+
+# Read-only with shell
+tools: Read, Grep, Glob, Bash
+
+# Code modification
+tools: Read, Edit, Write, Grep, Glob, Bash
+
+# Orchestrator (can delegate)
+tools: Read, Grep, Glob, Bash, Task
+
+# Full access (or omit entirely)
+tools: Read, Edit, Write, Bash, Grep, Glob, WebFetch, WebSearch, Task
+```
+
+## OpenCode Tools
+
+### Tool Categories
+
+OpenCode uses boolean flags for tool categories:
+
+| Tool | Description | Equivalent Claude Code |
+|------|-------------|------------------------|
+| `write` | Create/overwrite files | Write |
+| `edit` | Modify existing files | Edit |
+| `bash` | Execute shell commands | Bash |
+| `webfetch` | Fetch web content | WebFetch |
+
+### OpenCode Tool Configuration
+
+```yaml
+# Read-only (no modifications)
+tools:
+  write: false
+  edit: false
+  bash: false
+
+# Can modify files but no shell
+tools:
+  write: true
+  edit: true
+  bash: false
+
+# Full access
+tools:
+  write: true
+  edit: true
+  bash: true
+  webfetch: true
+```
+
+### OpenCode Permissions
+
+Fine-grained command control:
+
+```yaml
+permission:
+  "git *": allow       # Allow all git commands
+  "npm install": ask   # Prompt for npm install
+  "rm -rf": deny       # Block dangerous commands
+  "*": ask             # Ask for everything else
+```
+
+Permission values:
+- `allow`: Unrestricted access
+- `ask`: Approval required
+- `deny`: Blocked
+
+## Tool Selection by Purpose
 
 ### Read-Only Analysis
 
 For agents that should never modify files:
 
+**Claude Code:**
 ```yaml
 tools: Read, Grep, Glob
 ```
 
-Extended read-only with limited bash:
+**OpenCode:**
 ```yaml
-tools: Read, Grep, Glob, Bash
+tools:
+  write: false
+  edit: false
+  bash: false
 ```
-
-Note: Bash in read-only agents should only run commands like:
-- `ls`, `find`, `cat`, `head`, `tail`
-- `git status`, `git log`, `git diff`
-- `npm list`, `pip list`
 
 ### Code Modification
 
 For agents that need to change code:
 
+**Claude Code:**
 ```yaml
 tools: Read, Edit, Write, Grep, Glob, Bash
 ```
 
-### Full Exploration
-
-For agents that research and navigate:
-
+**OpenCode:**
 ```yaml
-tools: Read, Grep, Glob, Bash, WebFetch, WebSearch
+tools:
+  write: true
+  edit: true
+  bash: true
 ```
 
-### Minimal Set
+### Restricted Shell Access
 
-For highly constrained agents:
+Allow specific commands only:
 
+**Claude Code:** Use `permissionMode` or prompt instructions
+
+**OpenCode:**
 ```yaml
-tools: Read, Grep
+permission:
+  "git *": allow
+  "npm test": allow
+  "npm run *": allow
+  "*": deny
 ```
 
-## MCP Tools
-
-Agents can access MCP (Model Context Protocol) tools from configured servers.
-
-**Behavior:**
-- If `tools` field is omitted: Agent inherits all MCP tools
-- If `tools` field is specified: Must explicitly list MCP tools needed
-
-**Format for MCP tools:**
-```yaml
-tools: Read, Grep, mcp-server-name:tool-name
-```
-
-## Tool Selection Guidelines
+## Security Guidelines
 
 ### Principle of Least Privilege
 
-Grant only tools needed for the agent's purpose:
-
-| Agent Type | Recommended Tools |
+| Agent Type | Recommended Access |
 |------------|-------------------|
-| Code reviewer | Read, Grep, Glob, Bash (read commands) |
-| Test runner | Read, Bash, Grep, Glob |
-| Bug fixer | Read, Edit, Grep, Glob, Bash |
-| Documentation | Read, Write, Grep, Glob |
-| Explorer | Read, Grep, Glob |
+| Code reviewer | Read-only |
+| Test runner | Read + Bash |
+| Bug fixer | Read + Edit + Bash |
+| Documentation | Read + Write |
+| Explorer | Read only |
 
-### Security Considerations
+### High-Risk Tools
 
-**High-risk tools:**
-- `Bash` - Can execute arbitrary commands
-- `Write` - Can create files anywhere
-- `Edit` - Can modify any file
+Both platforms:
+- Shell access can execute arbitrary commands
+- Write/Edit can modify any file
+- Consider restricting for security-focused agents
 
-**Mitigation:**
-- Limit Bash to read-only commands in prompts
-- Specify exact tools needed
-- Use `permissionMode` for additional control
+### MCP Tools (Claude Code Only)
 
-### Inheritance vs Explicit
-
-**Inherit all (omit tools field):**
-- Pros: Agent has full capabilities, includes MCP
-- Cons: May have more power than needed
-
-**Explicit list:**
-- Pros: Clear boundaries, more secure
-- Cons: Must update if new tools needed
-
-**Recommendation:** Use explicit lists for production agents, inherit for testing.
-
-## Built-in Agent Tool Sets
-
-### Explore Agent (Haiku)
+Agents can access MCP tools from configured servers:
 
 ```yaml
-tools: Read, Grep, Glob, Bash
+# Inherit all MCP tools (omit tools field)
+# Or specify explicitly:
+tools: Read, Grep, mcp-server-name:tool-name
 ```
-
-Bash limited to: ls, git status, git log, git diff, find, cat, head, tail
-
-### General-Purpose Agent (Sonnet)
-
-```yaml
-# Inherits all tools
-```
-
-### Plan Agent (Sonnet)
-
-```yaml
-tools: Read, Glob, Grep, Bash
-```
-
-Read-only research mode.

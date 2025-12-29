@@ -1,6 +1,10 @@
 # Agent Templates
 
-## Basic Template
+Templates for both Claude Code and OpenCode platforms.
+
+## Claude Code Templates
+
+### Basic Template
 
 For simple, focused agents:
 
@@ -35,7 +39,7 @@ When invoked:
 [Actionable items]
 ```
 
-## Advanced Template (State Machine Pattern)
+### Advanced Template (State Machine Pattern)
 
 For complex agents that need structured autonomy:
 
@@ -74,11 +78,6 @@ Execute based on classification:
 - TYPE B: [Moderate approach]
 - TYPE C: [Comprehensive approach]
 
-Minimum parallel tool calls:
-- TYPE A: 2+
-- TYPE B: 3+
-- TYPE C: 4+
-
 **Exit Phase 2 when:** Task complete and verified.
 
 ## Required Output
@@ -114,7 +113,7 @@ Stop and report if:
 - 3+ consecutive failures → Request guidance
 ```
 
-## Orchestrator Template
+### Orchestrator Template
 
 For agents that coordinate other agents:
 
@@ -150,46 +149,148 @@ When delegating, prompts MUST include:
 
 1. **TASK**: Specific action required
 2. **EXPECTED OUTCOME**: What success looks like
-3. **REQUIRED TOOLS**: Tools the subagent needs
-4. **MUST DO**: Non-negotiable requirements
-5. **MUST NOT DO**: Explicit prohibitions
-6. **CONTEXT**: Background information
-7. **EXIT CRITERIA**: How to verify completion
-
-Vague prompts are rejected.
-
-## Workflow
-
-1. Receive request
-2. Classify: [Types and criteria]
-3. For each subtask:
-   - Select specialist based on cost/capability
-   - Prepare structured delegation prompt
-   - Launch (parallel when independent)
-   - Verify results
-4. Synthesize and report
-
-## Self-Handling Criteria
-
-Handle directly (don't delegate) when:
-- [Simple case that doesn't need specialist]
-- [Time-critical with no specialist available]
-- [Coordination logic only]
-
-## Progress Tracking
-
-For multi-step tasks:
-- Create todo list immediately
-- One task `in_progress` at a time
-- Mark `completed` immediately when done
-- Todos provide real-time visibility
+3. **MUST DO**: Non-negotiable requirements
+4. **MUST NOT DO**: Explicit prohibitions
+5. **CONTEXT**: Background information
+6. **EXIT CRITERIA**: How to verify completion
 
 ## NEVER DO
 
-- Never delegate without all 7 sections
+- Never delegate without structured prompt
 - Never use expensive agents for simple lookups
 - Never proceed without verifying specialist output
-- Never skip progress tracking on multi-step tasks
+```
+
+## OpenCode Templates
+
+### Basic Template
+
+For simple, focused agents:
+
+```markdown
+---
+description: Brief description of purpose. Use proactively when [trigger condition].
+mode: subagent
+model: anthropic/claude-sonnet-4-20250514
+tools:
+  write: false
+  edit: false
+  bash: false
+---
+
+You are a [role] specializing in [domain].
+
+When invoked:
+1. [First immediate action]
+2. [Second action]
+3. [Third action]
+
+[Domain expertise section]
+
+[Checklist or criteria]
+
+## Output Format
+
+### [Section 1]
+[Content]
+
+### Recommendations
+[Actionable items]
+```
+
+### Advanced Template with Permissions
+
+For agents needing fine-grained access control:
+
+```markdown
+---
+description: [Capability description]. Use proactively when [trigger].
+mode: subagent
+model: anthropic/claude-sonnet-4-20250514
+temperature: 0.7
+tools:
+  write: true
+  edit: true
+  bash: true
+permission:
+  "git *": allow
+  "npm test": allow
+  "npm run *": allow
+  "*": ask
+maxSteps: 15
+---
+
+You are a [role] specializing in [domain].
+
+## Phase 0: Request Classification
+
+Before acting, classify the request:
+- TYPE A: [simple case] → [strategy]
+- TYPE B: [medium case] → [strategy]
+- TYPE C: [complex case] → [strategy]
+
+## Phase 1: Assessment
+
+[Gather context:]
+- [What to check first]
+- [What patterns to look for]
+
+## Phase 2: Execution
+
+Execute based on classification.
+
+## Required Output
+
+<findings>
+**Files:** [relevant files]
+**Result:** [outcome]
+</findings>
+
+<confidence>
+HIGH / MEDIUM / LOW
+</confidence>
+
+## NEVER DO
+
+- [Constraint 1]
+- [Constraint 2]
+```
+
+### Primary Agent Template (OpenCode Only)
+
+For main conversation agents:
+
+```markdown
+---
+description: [What this mode does]. Switch to this for [use case].
+mode: primary
+model: anthropic/claude-sonnet-4-20250514
+tools:
+  write: false
+  edit: false
+  bash: false
+permission:
+  "git *": allow
+  "*": deny
+---
+
+You are in [mode name] mode.
+
+## Mode Characteristics
+
+- [What you can do]
+- [What you cannot do]
+- [How to interact]
+
+## When to Switch Modes
+
+Suggest switching to:
+- **Build mode** when: [conditions]
+- **Plan mode** when: [conditions]
+
+## Output Style
+
+[How responses should be formatted in this mode]
 ```
 
 ## Placeholder Guide
@@ -202,11 +303,10 @@ For multi-step tasks:
 | `[trigger condition]` | When to use (e.g., "modifying auth code") |
 | `[First immediate action]` | What to do first (e.g., "Run git diff") |
 | `TYPE A/B/C` | Your request classification categories |
-| `tools:` | Comma-separated list or remove for all tools |
-| `model:` | sonnet, opus, haiku, or inherit |
 
 ## Tool Presets
 
+### Claude Code:
 ```yaml
 # Read-only analysis
 tools: Read, Grep, Glob
@@ -217,26 +317,52 @@ tools: Read, Grep, Glob, Bash
 # Code modification
 tools: Read, Edit, Write, Grep, Glob, Bash
 
-# Orchestrator (can delegate)
+# Orchestrator
 tools: Read, Grep, Glob, Bash, Task
+```
 
-# Full access (or omit tools line entirely)
-tools: Read, Edit, Write, Bash, Grep, Glob, WebFetch, WebSearch, Task
+### OpenCode:
+```yaml
+# Read-only
+tools:
+  write: false
+  edit: false
+  bash: false
+
+# Read-only with shell
+tools:
+  write: false
+  bash: true
+
+# Code modification
+tools:
+  write: true
+  edit: true
+  bash: true
 ```
 
 ## Model Selection
 
+### Claude Code:
 ```yaml
-model: haiku    # Fast, simple tasks, high-volume
-model: sonnet   # Balanced, most tasks (default)
-model: opus     # Complex reasoning, architecture, orchestration
+model: haiku    # Fast, simple tasks
+model: sonnet   # Balanced (default)
+model: opus     # Complex reasoning
 model: inherit  # Match main conversation
+```
+
+### OpenCode:
+```yaml
+model: anthropic/claude-haiku-4-20250514   # Fast
+model: anthropic/claude-sonnet-4-20250514  # Balanced
+model: anthropic/claude-opus-4-20250514    # Complex
 ```
 
 ## When to Use Which Template
 
-| Template | Use When |
-|----------|----------|
-| Basic | Single responsibility, straightforward execution |
-| Advanced | Multiple request types, need structured phases |
-| Orchestrator | Coordinates other agents, complex workflows |
+| Template | Platform | Use When |
+|----------|----------|----------|
+| Basic | Both | Single responsibility, straightforward |
+| Advanced | Both | Multiple request types, structured phases |
+| Orchestrator | Claude Code | Coordinates other agents |
+| Primary | OpenCode only | Main conversation mode |

@@ -1,35 +1,59 @@
 <required_reading>
-Before reviewing, read:
-- references/agent-configuration.md
-- references/best-practices.md
+Before reviewing, read based on platform:
+- Claude Code → references/claude-code-config.md
+- OpenCode → references/opencode-config.md
+- Both → references/best-practices.md
 </required_reading>
 
 <objective>
-Audit an existing subagent configuration against best practices and identify improvements.
+Audit an existing agent configuration against best practices for Claude Code or OpenCode.
 </objective>
 
 <process>
-## Step 1: Read the Agent File
+## Step 1: Identify Platform
+
+Determine platform from file path:
+- `.claude/agents/` or `~/.claude/agents/` → Claude Code
+- `.opencode/agent/` or `~/.config/opencode/agent/` → OpenCode
+- `opencode.json` → OpenCode (JSON format)
+
+## Step 2: Read the Agent File
 
 Get the agent file path and read its contents.
 
-## Step 2: Validate YAML Frontmatter
+## Step 3: Validate Configuration
+
+### Claude Code Validation
 
 Check required fields:
 - [ ] `name`: Present, lowercase, hyphens only
 - [ ] `description`: Present, describes when to use
 
 Check optional fields if present:
-- [ ] `tools`: Valid comma-separated list
+- [ ] `tools`: Valid comma-separated list (Read, Write, Edit, Glob, Grep, Bash, Task, etc.)
 - [ ] `model`: Valid value (sonnet, opus, haiku, inherit)
-- [ ] `permissionMode`: Valid value if present
+- [ ] `permissionMode`: Valid if present (default, acceptEdits, bypassPermissions, plan, ignore)
 - [ ] `skills`: Valid comma-separated list if present
 
-## Step 3: Evaluate Description Quality
+### OpenCode Validation
+
+Check required fields:
+- [ ] `description`: Present, describes when to use
+
+Check optional fields:
+- [ ] `mode`: Valid value (primary, subagent, all)
+- [ ] `model`: Full model identifier (anthropic/claude-...)
+- [ ] `temperature`: Number between 0.0 and 1.0
+- [ ] `tools`: Object with boolean values (write, edit, bash, webfetch)
+- [ ] `permission`: Object with allow/ask/deny values
+- [ ] `maxSteps`: Positive integer
+- [ ] `disable`: Boolean
+
+## Step 4: Evaluate Description Quality
 
 Good descriptions:
 - State what the agent does
-- State when Claude should use it
+- State when to use it
 - Use action words ("Use proactively", "Invoke when")
 
 Flag if description:
@@ -37,19 +61,21 @@ Flag if description:
 - Doesn't indicate when to use
 - Is too long (should be 1-2 sentences)
 
-## Step 4: Assess Tool Selection
+## Step 5: Assess Tool Selection
 
+### Claude Code
 Check if tools match purpose:
 - **Over-permissioned**: Has Write/Edit but only analyzes
-- **Under-permissioned**: Missing tools needed for stated purpose
+- **Under-permissioned**: Missing tools needed for purpose
 - **Optimal**: Has exactly what's needed
 
-Common issues:
-- Read-only agents with Edit/Write tools
-- Analysis agents with Bash execution
-- Missing Grep/Glob for search-focused agents
+### OpenCode
+Check tool booleans:
+- Read-only agent with `write: true` → over-permissioned
+- Code modifier with `write: false` → under-permissioned
+- Check `permission` wildcards for security
 
-## Step 5: Review System Prompt
+## Step 6: Review System Prompt
 
 Quality checklist:
 - [ ] Clear role definition
@@ -65,25 +91,30 @@ Common issues:
 - Missing output format
 - No domain expertise included
 
-## Step 6: Check Model Selection
+## Step 7: Check Model Selection
 
-Evaluate model choice:
+### Claude Code
 - `haiku` for simple/fast tasks
 - `sonnet` for balanced tasks
 - `opus` for complex reasoning
-- `inherit` for consistency with main conversation
+- `inherit` for consistency
+
+### OpenCode
+- Haiku for exploration
+- Sonnet for most tasks
+- Opus for complex analysis
 
 Flag if:
 - Complex task using haiku
 - Simple task using opus (wasteful)
-- No model specified when inherit would be better
 
-## Step 7: Generate Report
-
-Structure findings:
+## Step 8: Generate Report
 
 ```markdown
 ## Agent Review: [name]
+
+### Platform
+[Claude Code / OpenCode]
 
 ### Summary
 [Overall assessment]
@@ -103,7 +134,8 @@ Structure findings:
 
 <success_criteria>
 Review is complete when:
-- [ ] All YAML fields validated
+- [ ] Platform identified correctly
+- [ ] All configuration fields validated for that platform
 - [ ] Description quality assessed
 - [ ] Tool selection evaluated
 - [ ] System prompt reviewed for completeness

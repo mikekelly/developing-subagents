@@ -1,209 +1,202 @@
-# Agent Configuration Reference
+# Agent Configuration Reference (Shared)
 
-## File Format
+This reference covers concepts shared between Claude Code and OpenCode agents, plus migration guidance.
 
-Subagents are Markdown files with YAML frontmatter:
+## Core Concepts (Both Platforms)
+
+### What Are Agents?
+
+Agents are pre-configured AI assistants with:
+- **Separate context**: Own conversation history
+- **Custom configuration**: Specific tools, model, system prompt
+- **Focused expertise**: Optimized for particular tasks
+
+### Agent Lifecycle
+
+1. User makes request in main conversation
+2. Platform evaluates if an agent matches the task
+3. Agent is invoked with the task
+4. Agent works independently in its own context
+5. Agent returns results to main conversation
+6. Results presented to user
+
+### System Prompt Structure
+
+Both platforms use similar prompt structure:
 
 ```markdown
----
-name: agent-name
-description: When and why to use this agent
-tools: tool1, tool2, tool3
-model: sonnet
-permissionMode: default
-skills: skill1, skill2
----
-
-System prompt content here...
-```
-
-## Required Fields
-
-### name
-
-Unique identifier for the agent.
-
-**Requirements:**
-- Lowercase letters only
-- Hyphens for word separation
-- No spaces or special characters
-- Must be unique within scope (project or user level)
-
-**Examples:**
-```yaml
-name: code-reviewer      # Good
-name: test-runner        # Good
-name: api-debugger       # Good
-name: Code_Reviewer      # Bad - uppercase and underscore
-name: my agent           # Bad - spaces
-```
-
-### description
-
-Natural language description of the agent's purpose and when to use it.
-
-**Purpose:**
-- Tells Claude WHEN to automatically invoke the agent
-- Appears in /agents listing
-- Should be 1-2 sentences
-
-**Trigger phrases for proactive use:**
-- "Use proactively"
-- "Use immediately after"
-- "MUST BE USED when"
-- "Invoke automatically"
-
-**Examples:**
-```yaml
-# Good - clear trigger
-description: Expert code reviewer. Use proactively after any code modifications.
-
-# Good - specific use case
-description: Database query optimizer. Use when analyzing SQL performance issues.
-
-# Bad - no trigger indication
-description: Helps with code.
-
-# Bad - too vague
-description: General purpose helper for various tasks.
-```
-
-## Optional Fields
-
-### tools
-
-Comma-separated list of tools the agent can access.
-
-**Behavior:**
-- If omitted: Agent inherits ALL tools from main thread (including MCP tools)
-- If specified: Agent can ONLY use listed tools
-
-**Format:**
-```yaml
-tools: Read, Grep, Glob, Bash
-tools: Read, Edit, Write, Grep, Glob, Bash
-```
-
-**Recommendation:** Specify tools explicitly for security. Only grant what's needed.
-
-### model
-
-Which AI model the agent uses.
-
-**Valid values:**
-| Value | Description |
-|-------|-------------|
-| `sonnet` | Balanced performance (default if omitted) |
-| `opus` | Most capable, complex reasoning |
-| `haiku` | Fastest, simple tasks |
-| `inherit` | Use same model as main conversation |
-
-**Examples:**
-```yaml
-model: haiku    # Fast exploration agent
-model: opus     # Complex architecture decisions
-model: inherit  # Match parent conversation
-```
-
-### permissionMode
-
-How the agent handles permission requests.
-
-**Valid values:**
-| Value | Description |
-|-------|-------------|
-| `default` | Normal permission handling |
-| `acceptEdits` | Auto-accept file edits |
-| `bypassPermissions` | Skip all permission prompts |
-| `plan` | Planning mode (read-only research) |
-| `ignore` | Ignore permission system |
-
-**Default:** `default`
-
-### skills
-
-Skills to auto-load when agent starts.
-
-**Important:** Subagents do NOT inherit skills from the parent conversation. You must explicitly list needed skills.
-
-**Format:**
-```yaml
-skills: commit, review-pr
-skills: ui-ux-pro-max
-```
-
-## System Prompt (Body)
-
-Everything after the YAML frontmatter closing `---` is the system prompt.
-
-**Structure recommendation:**
-```markdown
----
-[frontmatter]
----
-
 You are a [role] specializing in [domain].
 
 When invoked:
-1. [First immediate action]
+1. [First action]
 2. [Second action]
 3. [Continue pattern]
 
-[Domain expertise and guidance]
+[Domain-specific guidance]
 
 [Checklist or criteria]
 
-[Output format specification]
+[Output format requirements]
 ```
 
-## File Locations
+## Platform Comparison
 
-### Project-Level Agents
+### File Locations
 
-**Location:** `.claude/agents/`
+| Type | Claude Code | OpenCode |
+|------|-------------|----------|
+| Project | `.claude/agents/` | `.opencode/agent/` |
+| User | `~/.claude/agents/` | `~/.config/opencode/agent/` |
+| CLI/Config | `--agents` JSON | `opencode.json` |
 
-**Characteristics:**
-- Available only in current project
-- Highest priority (overrides user-level)
-- Should be version controlled
-- Team-shareable
+### Configuration Format
 
-### User-Level Agents
-
-**Location:** `~/.claude/agents/`
-
-**Characteristics:**
-- Available across all projects
-- Lower priority than project-level
-- Personal productivity tools
-- Not version controlled by default
-
-## Priority Order
-
-When agent names conflict:
-1. CLI-defined agents (`--agents` flag) - session only
-2. Project-level agents (`.claude/agents/`)
-3. User-level agents (`~/.claude/agents/`)
-4. Plugin agents
-5. Built-in agents
-
-## CLI-Based Configuration
-
-Define agents via command line:
-
-```bash
-claude --agents '{
-  "agent-name": {
-    "description": "Description here",
-    "prompt": "System prompt here",
-    "tools": ["Read", "Grep"],
-    "model": "sonnet"
-  }
-}'
+**Claude Code (YAML frontmatter):**
+```yaml
+---
+name: code-reviewer
+description: Reviews code quality
+tools: Read, Grep, Glob, Bash
+model: sonnet
+permissionMode: default
+skills: commit
+---
 ```
 
-Use for:
-- Quick testing
-- Session-specific agents
-- Automation scripts
-- Documentation examples
+**OpenCode (YAML frontmatter or JSON):**
+```yaml
+---
+description: Reviews code quality
+mode: subagent
+model: anthropic/claude-sonnet-4-20250514
+temperature: 0.7
+tools:
+  write: false
+  bash: false
+permission:
+  "git *": allow
+---
+```
+
+### Field Mapping
+
+| Concept | Claude Code | OpenCode |
+|---------|-------------|----------|
+| Agent name | `name:` field | Filename |
+| Description | `description:` | `description:` |
+| Agent type | Always subagent | `mode: primary\|subagent\|all` |
+| Model | `model: sonnet` | `model: anthropic/claude-...` |
+| Tools | Comma-separated names | Object with booleans |
+| Permissions | `permissionMode:` | `permission:` with wildcards |
+| Skills/Prompts | `skills:` field | `prompt: {file:...}` |
+
+### Tool Access Comparison
+
+**Claude Code tools:**
+- `Read`, `Write`, `Edit`, `Glob`, `Grep`
+- `Bash`, `Task`
+- `WebFetch`, `WebSearch`, `LSP`
+- `AskUserQuestion`, `TodoWrite`
+
+**OpenCode tools:**
+- `write` (includes Write + Edit)
+- `bash` (shell commands)
+- `webfetch` (web requests)
+
+### Model Aliases
+
+| Claude Code | OpenCode |
+|-------------|----------|
+| `sonnet` | `anthropic/claude-sonnet-4-20250514` |
+| `opus` | `anthropic/claude-opus-4-20250514` |
+| `haiku` | `anthropic/claude-haiku-4-20250514` |
+| `inherit` | (use parent model) |
+
+## Migration Guide
+
+### Claude Code → OpenCode
+
+1. **Create agent directory:**
+   ```bash
+   mkdir -p .opencode/agent
+   ```
+
+2. **Rename and restructure file:**
+   - Remove `name:` field (use filename instead)
+   - Add `mode: subagent`
+   - Convert model alias to full identifier
+   - Convert tools to object format
+   - Convert permissionMode to permission object
+
+3. **Example conversion:**
+
+   **Before (Claude Code):**
+   ```yaml
+   ---
+   name: code-reviewer
+   description: Reviews code for quality
+   tools: Read, Grep, Glob, Bash
+   model: sonnet
+   permissionMode: default
+   ---
+   ```
+
+   **After (OpenCode) - `.opencode/agent/code-reviewer.md`:**
+   ```yaml
+   ---
+   description: Reviews code for quality
+   mode: subagent
+   model: anthropic/claude-sonnet-4-20250514
+   tools:
+     write: false
+     bash: true
+   ---
+   ```
+
+### OpenCode → Claude Code
+
+1. **Create agent directory:**
+   ```bash
+   mkdir -p .claude/agents
+   ```
+
+2. **Restructure file:**
+   - Add `name:` field matching filename
+   - Remove `mode:` (all are subagents)
+   - Convert model to alias
+   - Convert tools object to comma-separated list
+
+3. **Example conversion:**
+
+   **Before (OpenCode):**
+   ```yaml
+   ---
+   description: Reviews code for quality
+   mode: subagent
+   model: anthropic/claude-sonnet-4-20250514
+   tools:
+     write: false
+     bash: true
+   ---
+   ```
+
+   **After (Claude Code) - `.claude/agents/code-reviewer.md`:**
+   ```yaml
+   ---
+   name: code-reviewer
+   description: Reviews code for quality
+   tools: Read, Grep, Glob, Bash
+   model: sonnet
+   ---
+   ```
+
+## Shared Best Practices
+
+These principles apply to both platforms:
+
+1. **Single responsibility**: One agent, one job
+2. **Clear triggers**: Description says when to use
+3. **Minimal tools**: Only grant what's needed
+4. **Specific prompts**: Step-by-step instructions
+5. **Defined output**: Specify expected format
+6. **Test explicitly**: Verify before relying on auto-delegation

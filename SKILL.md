@@ -1,70 +1,40 @@
 ---
 name: developing-subagents
-description: MUST be loaded before working with any subagent. Covers creating, building, reviewing, auditing, updating, modifying, and understanding Claude Code subagents and the Task tool. Use when setting up agent configurations, debugging agent behavior, or learning how agents work.
+description: MUST be loaded before working with any subagent or agent. Covers creating, building, reviewing, auditing, updating, modifying, and understanding agents for Claude Code and OpenCode. Use when setting up agent configurations, debugging agent behavior, or learning how agents work. Supports both platforms.
 ---
 
 <essential_principles>
-Subagents are pre-configured AI assistants that Claude Code delegates tasks to. Each subagent:
-- Has a specific purpose and expertise area
-- Uses its own context window separate from the main conversation
-- Can be configured with specific tools it's allowed to use
-- Includes a custom system prompt guiding its behavior
+Agents are pre-configured AI assistants that can be delegated specific tasks. Both **Claude Code** and **OpenCode** support custom agents with similar concepts but different implementations.
 
-**Key Benefits:**
-- **Context preservation**: Prevents pollution of main conversation
+**Key Benefits (Both Platforms):**
+- **Context preservation**: Separate context prevents pollution of main conversation
 - **Specialized expertise**: Fine-tuned instructions for specific domains
 - **Reusability**: Use across projects, share with teams
-- **Flexible permissions**: Different tool access per subagent
+- **Flexible permissions**: Different tool access per agent
 
-**File Locations:**
+**Platform Comparison:**
 
-| Type | Location | Scope | Priority |
-|------|----------|-------|----------|
-| Project subagents | `.claude/agents/` | Current project | Highest |
-| User subagents | `~/.claude/agents/` | All projects | Lower |
+| Aspect | Claude Code | OpenCode |
+|--------|-------------|----------|
+| Agent types | Subagents only | Primary + Subagents |
+| Project location | `.claude/agents/` | `.opencode/agent/` |
+| User location | `~/.claude/agents/` | `~/.config/opencode/agent/` |
+| CLI config | `--agents` JSON flag | `opencode.json` |
+| Tool format | Comma-separated names | Object with booleans |
+| Model format | Aliases (sonnet, opus, haiku) | Full IDs (anthropic/claude-...) |
 
-Project-level subagents take precedence when names conflict.
+**Built-in Agents:**
 
-**File Format (Required):**
-
-```markdown
----
-name: your-agent-name
-description: Description of when this agent should be invoked
-tools: tool1, tool2, tool3  # Optional - inherits all if omitted
-model: sonnet  # Optional - sonnet, opus, haiku, or inherit
-permissionMode: default  # Optional
-skills: skill1, skill2  # Optional - skills to auto-load
----
-
-Your agent's system prompt goes here. Define the agent's role,
-capabilities, and approach to solving problems.
-
-Include specific instructions, best practices, and constraints.
-```
-
-**Configuration Fields:**
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | Yes | Unique identifier (lowercase, hyphens only) |
-| `description` | Yes | Natural language description of purpose |
-| `tools` | No | Comma-separated tool list. Omit to inherit all |
-| `model` | No | `sonnet`, `opus`, `haiku`, or `inherit` |
-| `permissionMode` | No | `default`, `acceptEdits`, `bypassPermissions`, `plan`, `ignore` |
-| `skills` | No | Comma-separated skills to auto-load |
-
-**Built-in Subagents:**
-
-Claude Code includes these built-in subagents:
-
-- **general-purpose**: Complex multi-step tasks, can read/write files (Sonnet)
-- **Explore**: Fast read-only codebase exploration (Haiku)
-- **Plan**: Research during plan mode (Sonnet)
+| Agent | Claude Code | OpenCode | Purpose |
+|-------|-------------|----------|---------|
+| Build | - | ✓ (primary) | Default agent, full tool access |
+| Plan | ✓ | ✓ (primary) | Analysis without modifications |
+| General | ✓ | ✓ (subagent) | Multi-step research and tasks |
+| Explore | ✓ | ✓ (subagent) | Fast codebase exploration |
 
 **Advanced Patterns:**
 
-For complex agents, treat prompts as state machines with:
+For complex agents on either platform, treat prompts as state machines with:
 - Phase-based execution (classify → assess → execute)
 - Request classification (different types → different strategies)
 - Mandatory output structures (not suggestions, requirements)
@@ -72,44 +42,38 @@ For complex agents, treat prompts as state machines with:
 - Escalation triggers (when to stop and ask for help)
 
 See `references/advanced-patterns.md` for detailed guidance.
-
-**Using the Task Tool:**
-
-The Task tool launches subagents. Required parameters:
-- `description`: Short (3-5 word) summary
-- `prompt`: Detailed task instructions
-- `subagent_type`: Which agent type to use
-
-Optional parameters:
-- `model`: Override model (`sonnet`, `opus`, `haiku`)
-- `resume`: Agent ID to continue previous conversation
-- `run_in_background`: Run asynchronously
-
-Example Task tool invocation:
-```json
-{
-  "description": "Review authentication code",
-  "prompt": "Review the auth module for security issues...",
-  "subagent_type": "code-reviewer"
-}
-```
 </essential_principles>
 
 <intake>
-What would you like to do?
+**Which platform are you working with?**
 
-1. **Create** a new subagent
-2. **Review** an existing subagent
-3. **Update** an existing subagent
-4. **Understand** how subagents work
+- **Claude Code** (`.claude/agents/`, Task tool)
+- **OpenCode** (`.opencode/agent/`, `opencode.json`)
+
+**What would you like to do?**
+
+1. **Create** a new agent
+2. **Review** an existing agent
+3. **Update** an existing agent
+4. **Understand** how agents work
 
 **Wait for response before proceeding.**
 </intake>
 
 <routing>
+**Platform Detection:**
+- If user mentions "Claude Code", `.claude/`, or Task tool → Claude Code platform
+- If user mentions "OpenCode", `.opencode/`, or `opencode.json` → OpenCode platform
+- If unclear → Ask which platform
+
+**Required Reading by Platform:**
+- Claude Code → `references/claude-code-config.md`
+- OpenCode → `references/opencode-config.md`
+- Both → `references/agent-configuration.md` (shared concepts)
+
 | Response | Next Action | Workflow |
 |----------|-------------|----------|
-| 1, "create", "new", "build" | Ask: "Project-level or user-level agent?" | workflows/create-agent.md |
+| 1, "create", "new", "build" | Ask: "Project-level or user-level?" | workflows/create-agent.md |
 | 2, "review", "audit", "check" | Ask: "Path to agent file?" | workflows/review-agent.md |
 | 3, "update", "modify", "edit" | Ask: "Path to agent file?" | workflows/update-agent.md |
 | 4, "understand", "explain", "how" | Explain concepts | workflows/understand-agents.md |
@@ -119,36 +83,43 @@ What would you like to do?
 - "review my agent", "check agent config" → workflows/review-agent.md
 - "add tools to agent", "change agent model" → workflows/update-agent.md
 - "how do agents work", "what is Task tool" → workflows/understand-agents.md
+- "OpenCode primary agent", "opencode subagent" → detect OpenCode platform
 
-**After reading the workflow, follow it exactly.**
+**After determining platform, read the appropriate reference, then follow the workflow exactly.**
 </routing>
 
 <quick_reference>
 **Quick Commands:**
 
-**Create agent interactively:**
-```
-/agents
-```
+| Action | Claude Code | OpenCode |
+|--------|-------------|----------|
+| Create interactively | `/agents` | `opencode agent create` |
+| Invoke explicitly | `Use the code-reviewer agent...` | `@agent-name prompt` |
+| List agents | `/agents` | `opencode agent list` |
 
-**Invoke agent explicitly:**
-```
-> Use the code-reviewer agent to check my changes
-```
-
-**Resume previous agent:**
+**Claude Code - Task Tool:**
 ```json
 {
-  "resume": "previous-agent-id",
-  "prompt": "Continue the analysis..."
+  "description": "Review auth code",
+  "prompt": "Check for security issues...",
+  "subagent_type": "code-reviewer",
+  "model": "sonnet",
+  "resume": "agent-id",
+  "run_in_background": true
 }
 ```
 
-**Run agent in background:**
+**OpenCode - JSON Config:**
 ```json
 {
-  "run_in_background": true,
-  "prompt": "Long-running task..."
+  "agent": {
+    "code-reviewer": {
+      "mode": "subagent",
+      "description": "Reviews code for quality",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "tools": {"write": false, "bash": false}
+    }
+  }
 }
 ```
 </quick_reference>
@@ -160,11 +131,13 @@ All in `references/`:
 
 | Reference | Content |
 |-----------|---------|
-| agent-configuration.md | Complete field reference, model selection |
-| available-tools.md | All tools agents can access |
+| claude-code-config.md | Claude Code specific: YAML frontmatter, tools, Task tool |
+| opencode-config.md | OpenCode specific: JSON config, modes, permissions |
+| agent-configuration.md | Shared concepts, comparison, migration guide |
+| available-tools.md | All tools agents can access (both platforms) |
 | best-practices.md | Design principles, prompt writing |
-| advanced-patterns.md | State machines, request classification, delegation, escalation |
-| example-agents.md | Code reviewer, debugger, data scientist |
+| advanced-patterns.md | State machines, request classification, delegation |
+| example-agents.md | Examples for both platforms |
 </reference_index>
 
 <workflows_index>
