@@ -1,6 +1,6 @@
 ---
-name: create-subagents
-description: Expert guidance for creating, building, and using Claude Code subagents and the Task tool. Use when working with subagents, setting up agent configurations, understanding how agents work, or using the Task tool to launch specialized agents.
+name: developing-subagents
+description: MUST be loaded before working with any subagent. Covers creating, building, reviewing, auditing, updating, modifying, and understanding Claude Code subagents and the Task tool. Use when setting up agent configurations, debugging agent behavior, or learning how agents work.
 ---
 
 <essential_principles>
