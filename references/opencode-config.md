@@ -159,93 +159,61 @@ Disable the agent without deleting:
 disable: true
 ```
 
-## Adding Domain Knowledge (Skills Equivalent)
+## Assigning Skills to Agents
 
-OpenCode doesn't have a native `skills:` field like Claude Code. Instead, incorporate domain knowledge through these methods:
+Skills loaded in the OpenCode harness can be assigned to agents by name using the `skill` permission field.
 
-### Method 1: Embed in System Prompt
-
-Include skill content directly in the agent's markdown body:
+### Skill Permission Syntax
 
 ```markdown
 ---
 description: Handles commits and pull requests
 mode: subagent
 model: anthropic/claude-sonnet-4-20250514
+skill:
+  commit: allow
+  review-pr: allow
 ---
 
-You are a PR assistant.
-
-<commit_guidelines>
-[Embed relevant commit skill content here]
-</commit_guidelines>
-
-<pr_review_checklist>
-[Embed PR review skill content here]
-</pr_review_checklist>
+You are a PR assistant...
 ```
 
-### Method 2: Reference External Files
+### Discovering Available Skills
 
-Use `{file:...}` syntax to include skill content:
-
-```yaml
-prompt: |
-  You are a PR assistant.
-
-  {file:~/.config/opencode/skill/commit-guidelines.md}
-  {file:~/.config/opencode/skill/pr-review.md}
-```
-
-Or in JSON config:
-```json
-{
-  "agent": {
-    "pr-assistant": {
-      "mode": "subagent",
-      "description": "Handles commits and PRs",
-      "prompt": "{file:./prompts/pr-assistant.md}"
-    }
-  }
-}
-```
-
-### Method 3: Create Skill Prompt Library
-
-Organize reusable skill content:
-```
-~/.config/opencode/
-├── agent/
-│   └── pr-assistant.md
-└── skill/            # Create this directory
-    ├── commit.md
-    ├── code-review.md
-    └── testing.md
-```
-
-Then reference in agent prompts:
-```yaml
-prompt: |
-  {file:~/.config/opencode/skill/commit.md}
-  {file:~/.config/opencode/skill/code-review.md}
-```
-
-### Discovering Relevant Skills
-
-Check what Claude Code skills are available (can adapt for OpenCode):
+Check what skills are available:
 ```bash
-ls ~/.claude/skills/
-ls .claude/skills/
+ls ~/.config/opencode/skill/
+ls .opencode/skill/
 ```
 
-**Matching Skills to Agent Purpose:**
+### Matching Skills to Agent Purpose
 
-| Agent Purpose | Skill Content to Include |
-|---------------|--------------------------|
-| Code reviewer | Style guides, review checklists |
-| Git workflow | Commit conventions, PR templates |
-| Documentation | Writing guidelines |
-| UI development | Design system rules |
+| Agent Purpose | Skills to Allow |
+|---------------|-----------------|
+| Code reviewer | `code-review`, style guide skills |
+| Git workflow | `commit`, `review-pr` |
+| Documentation | `developing-ai-prompts` |
+| UI development | `ui-ux-pro-max` |
+| Agent work | `developing-subagents` |
+
+### Example: PR Assistant with Skills
+
+File: `.opencode/agent/pr-assistant.md`
+```markdown
+---
+description: Handles commits and PRs. Use after completing a feature.
+mode: subagent
+model: anthropic/claude-sonnet-4-20250514
+tools:
+  write: true
+  bash: true
+skill:
+  commit: allow
+  review-pr: allow
+---
+
+You are a PR assistant that helps create well-structured commits and pull requests.
+```
 
 ## Invoking Agents
 

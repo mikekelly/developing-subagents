@@ -114,14 +114,14 @@ permission:
 
 ### Skills / Domain Knowledge
 
-Skills provide domain-specific knowledge and workflows. The platforms handle this differently:
+Skills provide domain-specific knowledge and workflows. Both platforms support skills but with different syntax:
 
 | Aspect | Claude Code | OpenCode |
 |--------|-------------|----------|
-| Native support | Yes (`skills:` field) | No (use workarounds) |
-| Syntax | `skills: skill1, skill2` | `{file:path/to/skill.md}` |
-| Inheritance | Must list explicitly | Must embed explicitly |
-| Location | `~/.claude/skills/`, `.claude/skills/` | Custom (suggest `~/.config/opencode/skill/`) |
+| Native support | Yes | Yes |
+| Syntax | `skills: skill1, skill2` | `skill:` with permissions |
+| Inheritance | Must list explicitly | Must allow explicitly |
+| Location | `~/.claude/skills/`, `.claude/skills/` | `~/.config/opencode/skill/`, `.opencode/skill/` |
 
 **Claude Code approach:**
 ```yaml
@@ -135,9 +135,9 @@ skills: commit, review-pr
 ```yaml
 ---
 description: Handles commits and PRs
-prompt: |
-  {file:~/.config/opencode/skill/commit.md}
-  {file:~/.config/opencode/skill/review-pr.md}
+skill:
+  commit: allow
+  review-pr: allow
 ---
 ```
 
