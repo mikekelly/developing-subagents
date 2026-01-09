@@ -1,6 +1,35 @@
-# Subagent Best Practices
+# Agent Best Practices
 
 For advanced patterns including state machines, request classification, and orchestration, see [advanced-patterns.md](advanced-patterns.md).
+
+## Prompt Hygiene Over Time
+
+Agent system prompts are especially susceptible to accumulation because:
+- Multiple engineers contribute over time
+- They're composed from templates + custom additions
+- Problems get "fixed" by adding emphasis rather than restructuring
+
+**The accumulation anti-pattern:**
+```
+Engineer A: "X isn't working well" → adds "IMPORTANT: always do X"
+                ↓
+This implicitly dilutes Y → Y starts failing
+                ↓
+Engineer B: adds "CRITICAL: never skip Y"
+                ↓
+Cycle continues until prompt is bloated and internally competing
+```
+
+**The fix:** Periodically review agent prompts holistically, not incrementally.
+
+**Audit checklist:**
+- [ ] Remove duplicate instructions (same intent stated multiple ways)
+- [ ] Tighten verbose formulations (fewer tokens, same meaning)
+- [ ] Check for conflicting emphasis (if everything is "critical", nothing is)
+- [ ] Verify intent balance (no single concern dominating at expense of others)
+- [ ] Ask: "What would I remove?" before asking "What should I add?"
+
+**Insight from production:** Lovable improved instruction-following and saved $20M/year by removing duplicates, tightening language, and maintaining intent balance—not by adding more emphasis.
 
 ## Design Principles
 

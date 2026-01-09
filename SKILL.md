@@ -1,6 +1,6 @@
 ---
-name: developing-subagents
-description: MUST be loaded before working with any subagent or agent. Covers creating, building, reviewing, auditing, updating, modifying, and understanding agents for Claude Code and OpenCode. Use when setting up agent configurations, debugging agent behavior, or learning how agents work. Supports both platforms.
+name: developing-agents
+description: "Covers creating, building, reviewing, auditing, updating, modifying, and understanding agents for Claude Code and OpenCode. Use when setting up agent configurations, debugging agent behavior, or learning how agents work. Supports both platforms."
 ---
 
 <essential_principles>
@@ -147,10 +147,10 @@ All in `workflows/`:
 
 | Workflow | Purpose |
 |----------|---------|
-| create-agent.md | Build a new subagent from scratch |
+| create-agent.md | Build a new agent from scratch |
 | review-agent.md | Audit agent against best practices |
 | update-agent.md | Modify existing agent configuration |
-| understand-agents.md | Learn how subagents work |
+| understand-agents.md | Learn how agents work |
 </workflows_index>
 
 <external_documentation>
