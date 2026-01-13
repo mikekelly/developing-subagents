@@ -169,3 +169,13 @@ Use WebFetch to retrieve these docs when needed for:
 - Platform-specific implementation details
 - Troubleshooting specific error messages
 </external_documentation>
+
+<success_criteria>
+A well-configured agent:
+- Has a clear, descriptive name matching its purpose
+- Has a description that explains when to use it
+- Uses appropriate tool restrictions (minimal permissions)
+- Has been tested with representative tasks
+- Follows platform-specific conventions (YAML for Claude Code, JSON for OpenCode)
+- Includes clear escalation triggers if handling complex domains
+</success_criteria>
